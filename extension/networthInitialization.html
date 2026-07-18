@@ -1,0 +1,103 @@
+<html lang="en"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Net Worth Estimator</title>
+<style>
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    max-width: 680px;
+    margin: 40px auto;
+    padding: 0 20px;
+    color: #1a1a1a;
+    background: #fafafa;
+  }
+  h1 { font-size: 22px; font-weight: 600; margin-bottom: 1.5rem; }
+  .row { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 1rem; }
+  .card {
+    background: #fff;
+    border-radius: 8px;
+    padding: 1rem;
+    border: 1px solid #e5e5e5;
+  }
+  .card p { font-size: 13px; color: #666; margin: 0 0 4px; }
+  .card input[type="number"] { width: 100%; font-size: 16px; padding: 6px; box-sizing: border-box; }
+  .slider-row { display: flex; align-items: center; gap: 12px; margin-bottom: 1rem; }
+  .slider-row label { font-size: 14px; color: #666; min-width: 140px; }
+  .slider-row input[type="range"] { flex: 1; }
+  .slider-row span { font-size: 14px; font-weight: 600; min-width: 40px; text-align: right; }
+  .result-card p:first-child { font-size: 13px; color: #666; margin: 0 0 4px; }
+  .result-card p:last-child { font-size: 22px; font-weight: 600; margin: 0; }
+  #start-button { width: 100%; padding: 10px; font-size: 15px; font-weight: 600; color: #fff; background: #2a78d6; border: 0; border-radius: 8px; cursor: pointer; }
+  #save-status { min-height: 20px; margin: 8px 0 0; color: #2f6f3e; font-size: 14px; text-align: center; }
+  #chart { width: 100%; height: 280px; display: block; margin-top: 1.5rem; background: #fff; border-radius: 8px; border: 1px solid #e5e5e5; }
+</style>
+</head>
+<body>
+
+<h1>Net worth estimator</h1>
+
+<div class="row">
+  <div class="card">
+    <p>Current net worth</p>
+    <input type="number" id="start" min="0" value="0" step="1000">
+  </div>
+  <div class="card">
+    <p>Starting salary</p>
+    <input type="number" id="salary" min="0" value="0" step="1000">
+  </div>
+</div>
+
+<div class="slider-row">
+  <label>Savings rate</label>
+  <input type="range" min="0" max="100" value="0" step="1" id="savings-rate">
+  <span id="savings-rate-out">0%</span>
+</div>
+
+<div class="slider-row">
+  <label>Annual raise</label>
+  <input type="range" min="0" max="20" value="0" step="0.5" id="annual-raise">
+  <span id="annual-raise-out">0%</span>
+</div>
+
+<div class="slider-row">
+  <label>Promotion bump</label>
+  <input type="range" min="0" max="100" value="0" step="1" id="promo-bump">
+  <span id="promo-bump-out">0%</span>
+</div>
+
+<div class="slider-row">
+  <label>Years per promotion</label>
+  <input type="range" min="1" max="20" value="1" step="1" id="promo-freq">
+  <span id="promo-freq-out">1</span>
+</div>
+
+<div class="slider-row">
+  <label>Investment return</label>
+  <input type="range" min="0" max="30" value="0" step="0.5" id="rate">
+  <span id="rate-out">0%</span>
+</div>
+
+<div class="slider-row">
+  <label>Years ahead</label>
+  <input type="range" min="1" max="60" value="1" step="1" id="years">
+  <span id="years-out">1</span>
+</div>
+
+<div class="row">
+  <div class="card result-card">
+    <p>Salary in <span id="years-label-a">1</span> years</p>
+    <p id="salary-result">$0</p>
+  </div>
+  <div class="card result-card">
+    <p>Net worth in <span id="years-label-b">1</span> years</p>
+    <p id="nw-result">$0</p>
+  </div>
+</div>
+
+<button id="start-button" type="button">Start with this net worth</button>
+<p id="save-status" role="status"></p>
+
+<canvas id="chart" aria-label="Line chart of projected net worth growth over time, drawn with plain canvas" width="1360" height="560"></canvas>
+<script src="networthInitialization.js"></script>
+
+</body></html>

@@ -1,4 +1,4 @@
-const STARTING_NET_WORTH = 1000000;
+const DEFAULT_STARTING_NET_WORTH = 100000;
 
 function formatCurrency(value) {
   return value.toLocaleString("en-US", {
@@ -15,12 +15,16 @@ function formatTime(seconds) {
 }
 
 async function render() {
-  const { netWorth, shortsWatched, timeSpentSeconds } = await chrome.storage.local.get([
+
+
+  const { netWorth, startingNetWorth, shortsWatched, timeSpentSeconds } = await chrome.storage.local.get([
+
     "netWorth",
+    "startingNetWorth",
     "shortsWatched",
     "timeSpentSeconds",
   ]);
-  const value = netWorth ?? STARTING_NET_WORTH;
+  const value = netWorth ?? startingNetWorth ?? DEFAULT_STARTING_NET_WORTH;
   const netWorthEl = document.getElementById("netWorth");
   netWorthEl.textContent = formatCurrency(value);
   netWorthEl.className = value >= 0 ? "positive" : "negative";
@@ -33,13 +37,27 @@ async function render() {
 }
 
 document.getElementById("reset").addEventListener("click", async () => {
-  await chrome.storage.local.set({
-    netWorth: STARTING_NET_WORTH,
-    shortsWatched: 0,
-    timeSpentSeconds: 0,
-    uncreditedWebsiteSeconds: 0,
+  await chrome.storage.local.remove([
+    "netWorth",
+    "startingNetWorth",
+    "shortsWatched",
+    "isInitialized",
+    "timeSpentSeconds",
+    "uncreditedWebsiteSeconds",
+  ]);
+  await chrome.action.setPopup({ popup: "" });
+  await chrome.tabs.create({
+    url: chrome.runtime.getURL("networthInitialization.html"),
   });
-  await render();
+  window.close();
+});
+
+chrome.storage.onChanged.addListener((changes, areaName) => {
+  if (areaName === "local" && (
+    changes.netWorth || changes.startingNetWorth || changes.shortsWatched || changes.timeSpentSeconds
+  )) {
+    render();
+  }
 });
 
 render();
