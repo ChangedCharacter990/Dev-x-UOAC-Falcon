@@ -78,6 +78,11 @@ export default function App() {
     window.location.reload();
   };
 
+  const handleLogout = async () => {
+    await chrome.storage.local.remove("account");
+    window.location.reload();
+  };
+
   return (
     <div
       style={{
@@ -128,6 +133,7 @@ export default function App() {
         style={{
           width: "100%",
           padding: 8,
+          marginBottom: 8,
           border: "none",
           borderRadius: 6,
           background: "#1e293b",
@@ -137,6 +143,22 @@ export default function App() {
         }}
       >
         Reset
+      </button>
+
+      <button
+        onClick={handleLogout}
+        style={{
+          width: "100%",
+          padding: 8,
+          border: "1px solid #334155",
+          borderRadius: 6,
+          background: "transparent",
+          color: "#94a3b8",
+          cursor: "pointer",
+          fontSize: 12,
+        }}
+      >
+        Log out
       </button>
     </div>
   );
