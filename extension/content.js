@@ -9,6 +9,65 @@ function formatCurrency(value) {
   });
 }
 
+// Mirrors extension/avatar-app/src/lib/wealthTiers.ts — keep in sync.
+function getTier(netWorth) {
+  if (netWorth >= 100000) return "wealthy";
+  if (netWorth >= 10000) return "successful";
+  if (netWorth >= 1000) return "average";
+  return "poor";
+}
+
+const WEALTH_SLOTS = {
+  poor: [{ slot: "pants" }, { slot: "shirt" }],
+  average: [{ slot: "pants" }, { slot: "shoes" }, { slot: "shirt" }],
+  successful: [
+    { slot: "pants" },
+    { slot: "shoes" },
+    { slot: "shirt" },
+    { slot: "glasses" },
+  ],
+  wealthy: [
+    { slot: "pants" },
+    { slot: "shoes" },
+    { slot: "shirt" },
+    { slot: "tie", bodies: ["male"] },
+    { slot: "jacket", bodies: ["male"] },
+    { slot: "necklace" },
+    { slot: "glasses" },
+  ],
+};
+
+function layerPaths(identity, tier) {
+  const layers = [`popup/sprites/identity/base_${identity.body}_${identity.skin}.png`];
+  const garments = WEALTH_SLOTS[tier]
+    .filter(({ bodies }) => !bodies || bodies.includes(identity.body))
+    .map(({ slot }) => `popup/sprites/wealth/${tier}/${slot}_${identity.body}.png`);
+  const glasses = garments.filter((p) => p.includes("/glasses_"));
+  const rest = garments.filter((p) => !p.includes("/glasses_"));
+  layers.push(...rest);
+  if (identity.hairStyle !== "bald") {
+    layers.push(`popup/sprites/identity/hair_${identity.hairStyle}_${identity.hairColor}.png`);
+  }
+  layers.push(...glasses);
+  return layers.map((path) => chrome.runtime.getURL(path));
+}
+
+async function renderPortraitAvatar(portraitEl, netWorth) {
+  const { identity } = await chrome.storage.local.get(["identity"]);
+  if (!identity) return; // no character created yet — keep the placeholder
+
+  portraitEl.innerHTML = "";
+  const tier = getTier(netWorth);
+  for (const src of layerPaths(identity, tier)) {
+    const img = document.createElement("img");
+    img.src = src;
+    img.alt = "";
+    img.style.cssText =
+      "position:absolute;inset:0;width:100%;height:100%;image-rendering:pixelated;";
+    portraitEl.appendChild(img);
+  }
+}
+
 function getUi() {
   let host = document.getElementById(UI_ID);
   if (host) return host.shadowRoot;
@@ -91,6 +150,7 @@ function showConsequence({ netWorth, shortsWatched, loss }) {
   }
 
   warning?.remove();
+  renderPortraitAvatar(loop.querySelector(".portrait"), netWorth);
   loop.querySelector(".worth").textContent = formatCurrency(netWorth);
   loop.querySelector(".loss-label").textContent = `−${formatCurrency(loss)} this scroll`;
   loop.querySelector(".count").textContent = `${shortsWatched} shorts watched`;
