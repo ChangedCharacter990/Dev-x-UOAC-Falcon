@@ -72,9 +72,9 @@ export function getScene(netWorth: number): WealthScene {
   if (netWorth >= 425_000) return { backgroundImage: "./backgrounds/02-house-mansion.png", avatarX: 50, avatarBottom: 3 };
   if (netWorth >= 250_000) return { backgroundImage: "./backgrounds/03-supercar.png", avatarX: 22, avatarBottom: 4 };
   if (netWorth >= 100_000) return { backgroundImage: "./backgrounds/04-office-building.png", avatarX: 50, avatarBottom: 3 };
-  if (netWorth >= 25_000) return { backgroundImage: "./backgrounds/05-fast-food-store.png", avatarX: 50, avatarBottom: 3 };
-  if (netWorth > 0) return { backgroundImage: "./backgrounds/06-makeshift-shack.png", avatarX: 75, avatarBottom: 3 };
-  if (netWorth === 0) return { backgroundImage: "./backgrounds/07-tent.png", avatarX: 52, avatarBottom: 3 };
+  if (netWorth >= 50_000) return { backgroundImage: "./backgrounds/05-fast-food-store.png", avatarX: 50, avatarBottom: 3 };
+  if (netWorth >= 10_000) return { backgroundImage: "./backgrounds/06-makeshift-shack.png", avatarX: 75, avatarBottom: 3 };
+  if (netWorth >= -10_000) return { backgroundImage: "./backgrounds/07-tent.png", avatarX: 52, avatarBottom: 3 };
   return { backgroundImage: "./backgrounds/08-dumpster.png", avatarX: 16, avatarBottom: 3 };
 }
 

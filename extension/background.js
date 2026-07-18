@@ -1,5 +1,7 @@
 const DEFAULT_STARTING_NET_WORTH = 100000;
-const LOSS_PER_SHORT = 2500;
+const LOSS_PER_SHORT_PERCENT = 0.05;
+const MIN_LOSS_PER_SHORT = 500;
+const MAX_LOSS_PER_SHORT = 20000;
 const EARNINGS_PER_10_SECONDS = 2500;
 const SECONDS_PER_EARNING = 10;
 
@@ -15,6 +17,7 @@ async function getState() {
   ]);
   return {
     netWorth: netWorth ?? startingNetWorth ?? DEFAULT_STARTING_NET_WORTH,
+    startingNetWorth: startingNetWorth ?? DEFAULT_STARTING_NET_WORTH,
     shortsWatched: shortsWatched ?? 0,
     timeSpentSeconds: timeSpentSeconds ?? 0,
     uncreditedWebsiteSeconds: uncreditedWebsiteSeconds ?? 0,
@@ -77,7 +80,7 @@ chrome.storage.onChanged.addListener(async (changes, areaName) => {
   }
 });
 
-chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === "TIME_SPENT") {
     if (!Number.isFinite(message.seconds) || message.seconds <= 0) return;
     getState().then(async ({ netWorth, timeSpentSeconds, uncreditedWebsiteSeconds }) => {
@@ -102,20 +105,18 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
 
   chrome.storage.local.get("identity").then(async ({ identity }) => {
     if (!identity) {
-      const url = chrome.runtime.getURL("popup/index.html");
-      const [existingTab] = await chrome.tabs.query({ url });
-      if (existingTab) {
-        await chrome.tabs.update(existingTab.id, { active: true });
-        await chrome.windows.update(existingTab.windowId, { focused: true });
-      } else {
-        await chrome.tabs.create({ url });
-      }
+      await chrome.action.setPopup({ popup: "popup/index.html" });
+      await chrome.action.openPopup({ windowId: sender.tab?.windowId });
       sendResponse({ requiresAvatar: true });
       return;
     }
 
-    const { netWorth, shortsWatched } = await getState();
-    const nextNetWorth = Math.max(netWorth - LOSS_PER_SHORT, -5000);
+    const { netWorth, startingNetWorth, shortsWatched } = await getState();
+    const loss = Math.min(
+      MAX_LOSS_PER_SHORT,
+      Math.max(MIN_LOSS_PER_SHORT, Math.round(startingNetWorth * LOSS_PER_SHORT_PERCENT))
+    );
+    const nextNetWorth = netWorth - loss;
     const nextShortsWatched = shortsWatched + 1;
     await chrome.storage.local.set({
       netWorth: nextNetWorth,
@@ -125,7 +126,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     sendResponse({
       netWorth: nextNetWorth,
       shortsWatched: nextShortsWatched,
-      loss: LOSS_PER_SHORT,
+      loss,
     });
   });
 
