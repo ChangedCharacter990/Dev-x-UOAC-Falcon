@@ -136,7 +136,7 @@ document.getElementById('start-button').addEventListener('click', async () => {
     shortsWatched: 0,
     isInitialized: true,
   });
-  await chrome.action.setPopup({ popup: 'popup.html' });
+  await chrome.action.setPopup({ popup: 'popup/index.html' });
 
   const currentTab = await chrome.tabs.getCurrent();
   if (currentTab?.id) {

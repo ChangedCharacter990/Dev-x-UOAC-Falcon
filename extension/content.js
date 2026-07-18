@@ -214,17 +214,36 @@ function watchYouTubeShorts() {
   }).observe(document.body, { childList: true, subtree: true });
 }
 
-function watchScrollFeed(matchesUrl) {
-  if (!matchesUrl(location.hostname)) return;
-  let debounce = null;
-  window.addEventListener(
-    "wheel",
-    () => {
-      clearTimeout(debounce);
-      debounce = setTimeout(reportShortScrolled, 400);
+function watchVideoFeed() {
+  const seen = new WeakSet();
+
+  const observer = new IntersectionObserver(
+    (entries) => {
+      for (const entry of entries) {
+        if (entry.isIntersecting && entry.intersectionRatio >= 0.75) {
+          if (!seen.has(entry.target)) {
+            seen.add(entry.target);
+            reportShortScrolled();
+          }
+        }
+      }
     },
-    { passive: true }
+    { threshold: [0.75] }
   );
+
+  const observeVideo = (video) => observer.observe(video);
+
+  document.querySelectorAll("video").forEach(observeVideo);
+
+  new MutationObserver((mutations) => {
+    for (const mutation of mutations) {
+      for (const node of mutation.addedNodes) {
+        if (!(node instanceof HTMLElement)) continue;
+        if (node.tagName === "VIDEO") observeVideo(node);
+        node.querySelectorAll?.("video").forEach(observeVideo);
+      }
+    }
+  }).observe(document.body, { childList: true, subtree: true });
 }
 
 if (!isExcludedTimeTrackingSite(location.hostname)) {
@@ -235,5 +254,5 @@ if (!isExcludedTimeTrackingSite(location.hostname)) {
   location.hostname.includes("tiktok.com") ||
   location.hostname.includes("instagram.com")
 ) {
-  watchScrollFeed(() => true);
+  watchVideoFeed();
 }
