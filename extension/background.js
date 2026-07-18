@@ -39,12 +39,13 @@ async function updateBadge(netWorth) {
 }
 
 async function configureAction() {
-  const { identity, isInitialized } = await chrome.storage.local.get([
+  const { account, identity, isInitialized } = await chrome.storage.local.get([
+    "account",
     "identity",
     "isInitialized",
   ]);
   await chrome.action.setPopup({
-    popup: !identity || isInitialized ? "popup/index.html" : "",
+    popup: !account || !identity || isInitialized ? "popup/index.html" : "",
   });
 
   if (isInitialized) {
@@ -71,7 +72,7 @@ chrome.storage.onChanged.addListener(async (changes, areaName) => {
     }
   }
 
-  if (changes.identity || changes.startingNetWorth || changes.isInitialized) {
+  if (changes.account || changes.identity || changes.startingNetWorth || changes.isInitialized) {
     await configureAction();
   }
 });
@@ -132,7 +133,14 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
 });
 
 chrome.action.onClicked.addListener(async () => {
-  const url = chrome.runtime.getURL("networthInitialization.html");
+  // The action popup can go stale — Chrome only re-evaluates setPopup() on
+  // the events wired up above, not on every click — so re-check storage
+  // here instead of assuming "no popup" means "needs net worth init".
+  const { account, identity } = await chrome.storage.local.get(["account", "identity"]);
+  await configureAction();
+
+  const path = !account || !identity ? "popup/index.html" : "networthInitialization.html";
+  const url = chrome.runtime.getURL(path);
   const [existingTab] = await chrome.tabs.query({ url });
 
   if (existingTab) {

@@ -3,38 +3,89 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Net Worth Estimator</title>
 <style>
+  :root { color-scheme: dark; }
   body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    max-width: 680px;
+    font-family: system-ui, sans-serif;
+    max-width: 420px;
     margin: 40px auto;
-    padding: 0 20px;
-    color: #1a1a1a;
-    background: #fafafa;
+    padding: 20px;
+    color: #f8fafc;
+    background: #0f172a;
   }
-  h1 { font-size: 22px; font-weight: 600; margin-bottom: 1.5rem; }
-  .row { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 1rem; }
+  p.eyebrow {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #94a3b8;
+    margin: 0 0 4px;
+    text-align: center;
+  }
+  h1 {
+    font-size: 15px;
+    font-weight: 600;
+    margin: 0 0 4px;
+    text-align: center;
+    color: #e2e8f0;
+  }
+  p.subhead {
+    font-size: 10px;
+    color: #64748b;
+    margin: 0 0 16px;
+    text-align: center;
+  }
+  .row { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 10px; }
   .card {
-    background: #fff;
+    background: #1e293b;
     border-radius: 8px;
-    padding: 1rem;
-    border: 1px solid #e5e5e5;
+    padding: 10px;
+    border: 1px solid #334155;
   }
-  .card p { font-size: 13px; color: #666; margin: 0 0 4px; }
-  .card input[type="number"] { width: 100%; font-size: 16px; padding: 6px; box-sizing: border-box; }
-  .slider-row { display: flex; align-items: center; gap: 12px; margin-bottom: 1rem; }
-  .slider-row label { font-size: 14px; color: #666; min-width: 140px; }
-  .slider-row input[type="range"] { flex: 1; }
-  .slider-row span { font-size: 14px; font-weight: 600; min-width: 40px; text-align: right; }
-  .result-card p:first-child { font-size: 13px; color: #666; margin: 0 0 4px; }
-  .result-card p:last-child { font-size: 22px; font-weight: 600; margin: 0; }
-  #start-button { width: 100%; padding: 10px; font-size: 15px; font-weight: 600; color: #fff; background: #2a78d6; border: 0; border-radius: 8px; cursor: pointer; }
-  #save-status { min-height: 20px; margin: 8px 0 0; color: #2f6f3e; font-size: 14px; text-align: center; }
-  #chart { width: 100%; height: 280px; display: block; margin-top: 1.5rem; background: #fff; border-radius: 8px; border: 1px solid #e5e5e5; }
+  .card p { font-size: 11px; color: #94a3b8; margin: 0 0 4px; }
+  .card input[type="number"] {
+    width: 100%;
+    font-size: 14px;
+    padding: 6px;
+    box-sizing: border-box;
+    background: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 4px;
+    color: #f8fafc;
+  }
+  .slider-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .slider-row label { font-size: 11px; color: #94a3b8; min-width: 110px; }
+  .slider-row input[type="range"] { flex: 1; accent-color: #4ade80; }
+  .slider-row span { font-size: 11px; font-weight: 600; min-width: 36px; text-align: right; color: #f8fafc; }
+  .result-card p:first-child { font-size: 11px; color: #94a3b8; margin: 0 0 4px; }
+  .result-card p:last-child { font-size: 18px; font-weight: 700; margin: 0; color: #4ade80; }
+  #start-button {
+    width: 100%;
+    padding: 10px;
+    margin-top: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #f8fafc;
+    background: #16a34a;
+    border: 0;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+  #save-status { min-height: 18px; margin: 8px 0 0; color: #4ade80; font-size: 12px; text-align: center; }
+  #chart {
+    width: 100%;
+    height: 200px;
+    display: block;
+    margin-top: 14px;
+    background: #1e293b;
+    border-radius: 8px;
+    border: 1px solid #334155;
+  }
 </style>
 </head>
 <body>
 
+<p class="eyebrow">Your Financial Journey</p>
 <h1>Net worth estimator</h1>
+<p class="subhead">Tune the sliders — this sets your starting balance.</p>
 
 <div class="row">
   <div class="card">

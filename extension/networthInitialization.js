@@ -25,10 +25,10 @@ function drawChart(labels, data) {
 
   const maxVal = Math.max(...data) * 1.1;
 
-  const gridColor = '#e1e0d9';
-  const axisColor = '#898781';
-  const lineColor = '#2a78d6';
-  const fillColor = 'rgba(42,120,214,0.12)';
+  const gridColor = '#334155';
+  const axisColor = '#94a3b8';
+  const lineColor = '#4ade80';
+  const fillColor = 'rgba(74,222,128,0.15)';
 
   const ySteps = 4;
   ctx.strokeStyle = gridColor;

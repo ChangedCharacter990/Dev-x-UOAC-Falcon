@@ -1,5 +1,6 @@
 import { AvatarRenderer } from "./components/AvatarRenderer";
 import { CharacterCreator } from "./components/CharacterCreator";
+import { SignUp } from "./components/SignUp";
 import { useNetWorth } from "./lib/useNetWorth";
 import { useIdentity } from "./lib/useIdentity";
 import { getScene, getTier } from "./lib/wealthTiers";
@@ -15,6 +16,7 @@ function formatCurrency(value: number) {
 export default function App() {
   const { netWorth, shortsWatched } = useNetWorth();
   const { identity, loaded, saveIdentity } = useIdentity();
+  const { account, loaded: accountLoaded, saveAccount } = useAccount();
 
   const handleCreate = async (newIdentity: Parameters<typeof saveIdentity>[0]) => {
     sessionStorage.setItem("avatarOnboardingHandled", "true");
@@ -29,6 +31,14 @@ export default function App() {
 
   if (!loaded) {
     return <div className="arcade-loading" />;
+  }
+
+  if (!account) {
+    return (
+      <div style={wrapperStyle}>
+        <SignUp onSignUp={(name) => saveAccount({ name })} />
+      </div>
+    );
   }
 
   if (!identity) {
@@ -49,6 +59,7 @@ export default function App() {
     }
 
     await chrome.storage.local.remove([
+      "account",
       "identity",
       "avatarPreviewIdentity",
       "netWorth",
@@ -59,6 +70,11 @@ export default function App() {
       "isInitialized",
     ]);
     await chrome.action.setPopup({ popup: "popup/index.html" });
+    window.location.reload();
+  };
+
+  const handleLogout = async () => {
+    await chrome.storage.local.remove("account");
     window.location.reload();
   };
 
