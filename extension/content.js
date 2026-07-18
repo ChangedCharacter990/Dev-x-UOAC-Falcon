@@ -271,7 +271,9 @@ function trackTimeOnSite() {
     }
   }
 
-  setInterval(reportElapsedTime, 15000);
+  // Report on the same cadence as the earning interval, so the popup's
+  // storage subscription receives each $2,500 increase promptly.
+  setInterval(reportElapsedTime, 10000);
   document.addEventListener("visibilitychange", () => {
     reportElapsedTime();
     isVisible = document.visibilityState === "visible";
