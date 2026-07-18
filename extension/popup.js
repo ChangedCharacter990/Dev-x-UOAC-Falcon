@@ -8,11 +8,21 @@ function formatCurrency(value) {
   });
 }
 
+function formatTime(seconds) {
+  const minutes = Math.floor(seconds / 60);
+  const remainingSeconds = seconds % 60;
+  return minutes > 0 ? `${minutes}m ${remainingSeconds}s` : `${remainingSeconds}s`;
+}
+
 async function render() {
-  const { netWorth, startingNetWorth, shortsWatched } = await chrome.storage.local.get([
+
+
+  const { netWorth, startingNetWorth, shortsWatched, timeSpentSeconds } = await chrome.storage.local.get([
+
     "netWorth",
     "startingNetWorth",
     "shortsWatched",
+    "timeSpentSeconds",
   ]);
   const value = netWorth ?? startingNetWorth ?? DEFAULT_STARTING_NET_WORTH;
   const netWorthEl = document.getElementById("netWorth");
@@ -21,6 +31,9 @@ async function render() {
   document.getElementById("shortsWatched").textContent = `${
     shortsWatched ?? 0
   } shorts watched`;
+  document.getElementById("timeSpent").textContent = `${formatTime(
+    timeSpentSeconds ?? 0
+  )} on other websites`;
 }
 
 document.getElementById("reset").addEventListener("click", async () => {
@@ -33,7 +46,14 @@ document.getElementById("reset").addEventListener("click", async () => {
   await chrome.action.setPopup({ popup: "" });
   await chrome.tabs.create({
     url: chrome.runtime.getURL("networthInitialization.html"),
+   /*
+  await chrome.storage.local.set({
+    netWorth: STARTING_NET_WORTH,
+    shortsWatched: 0,
+    timeSpentSeconds: 0,
+    uncreditedWebsiteSeconds: 0,
   });
+  */
   window.close();
 });
 
