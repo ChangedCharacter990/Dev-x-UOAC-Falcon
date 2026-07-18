@@ -8,10 +8,17 @@ function formatCurrency(value) {
   });
 }
 
+function formatTime(seconds) {
+  const minutes = Math.floor(seconds / 60);
+  const remainingSeconds = seconds % 60;
+  return minutes > 0 ? `${minutes}m ${remainingSeconds}s` : `${remainingSeconds}s`;
+}
+
 async function render() {
-  const { netWorth, shortsWatched } = await chrome.storage.local.get([
+  const { netWorth, shortsWatched, timeSpentSeconds } = await chrome.storage.local.get([
     "netWorth",
     "shortsWatched",
+    "timeSpentSeconds",
   ]);
   const value = netWorth ?? STARTING_NET_WORTH;
   const netWorthEl = document.getElementById("netWorth");
@@ -20,12 +27,16 @@ async function render() {
   document.getElementById("shortsWatched").textContent = `${
     shortsWatched ?? 0
   } shorts watched`;
+  document.getElementById("timeSpent").textContent = `${formatTime(
+    timeSpentSeconds ?? 0
+  )} on other websites`;
 }
 
 document.getElementById("reset").addEventListener("click", async () => {
   await chrome.storage.local.set({
     netWorth: STARTING_NET_WORTH,
     shortsWatched: 0,
+    timeSpentSeconds: 0,
   });
   await render();
 });

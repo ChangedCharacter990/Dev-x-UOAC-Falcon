@@ -2,13 +2,15 @@ const STARTING_NET_WORTH = 1000000;
 const LOSS_PER_SHORT = 2500;
 
 async function getState() {
-  const { netWorth, shortsWatched } = await chrome.storage.local.get([
+  const { netWorth, shortsWatched, timeSpentSeconds } = await chrome.storage.local.get([
     "netWorth",
     "shortsWatched",
+    "timeSpentSeconds",
   ]);
   return {
     netWorth: netWorth ?? STARTING_NET_WORTH,
     shortsWatched: shortsWatched ?? 0,
+    timeSpentSeconds: timeSpentSeconds ?? 0,
   };
 }
 
@@ -29,6 +31,16 @@ chrome.runtime.onInstalled.addListener(async () => {
 });
 
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+  if (message.type === "TIME_SPENT") {
+    if (!Number.isFinite(message.seconds) || message.seconds <= 0) return;
+    getState().then(async ({ timeSpentSeconds }) => {
+      const nextTimeSpentSeconds = timeSpentSeconds + message.seconds;
+      await chrome.storage.local.set({ timeSpentSeconds: nextTimeSpentSeconds });
+      sendResponse({ timeSpentSeconds: nextTimeSpentSeconds });
+    });
+    return true;
+  }
+
   if (message.type !== "SHORT_SCROLLED") return;
 
   getState().then(async ({ netWorth, shortsWatched }) => {
