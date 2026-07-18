@@ -1,31 +1,59 @@
-const STARTING_NET_WORTH = 1000000;
+const DEFAULT_STARTING_NET_WORTH = 100000;
 const LOSS_PER_SHORT = 2500;
 
 async function getState() {
-  const { netWorth, shortsWatched } = await chrome.storage.local.get([
+  const { netWorth, startingNetWorth, shortsWatched } = await chrome.storage.local.get([
     "netWorth",
+    "startingNetWorth",
     "shortsWatched",
   ]);
   return {
-    netWorth: netWorth ?? STARTING_NET_WORTH,
+    netWorth: netWorth ?? startingNetWorth ?? DEFAULT_STARTING_NET_WORTH,
     shortsWatched: shortsWatched ?? 0,
   };
 }
 
 async function updateBadge(netWorth) {
-  const label =
-    netWorth >= 1000
-      ? `${Math.round(netWorth / 1000)}k`
-      : `${Math.max(netWorth, 0)}`;
+  const value = Math.max(netWorth, 0);
+  const units = [
+    { threshold: 1_000_000_000, suffix: "B" },
+    { threshold: 1_000_000, suffix: "M" },
+    { threshold: 1_000, suffix: "K" },
+  ];
+  const unit = units.find(({ threshold }) => value >= threshold);
+  const label = unit
+    ? `${Math.round(value / unit.threshold)}${unit.suffix}`
+    : `${Math.round(value)}`;
   await chrome.action.setBadgeText({ text: label });
   await chrome.action.setBadgeBackgroundColor({
     color: netWorth <= 0 ? "#dc2626" : "#16a34a",
   });
 }
 
-chrome.runtime.onInstalled.addListener(async () => {
-  const { netWorth } = await getState();
-  await updateBadge(netWorth);
+async function configureAction() {
+  const { isInitialized } = await chrome.storage.local.get("isInitialized");
+  await chrome.action.setPopup({
+    popup: isInitialized ? "popup.html" : "",
+  });
+
+  if (isInitialized) {
+    const { netWorth } = await getState();
+    await updateBadge(netWorth);
+  } else {
+    await chrome.action.setBadgeText({ text: "" });
+  }
+}
+
+chrome.runtime.onInstalled.addListener(configureAction);
+
+chrome.runtime.onStartup.addListener(configureAction);
+
+chrome.storage.onChanged.addListener((changes, areaName) => {
+  if (areaName === "local" && (
+    changes.netWorth || changes.startingNetWorth || changes.isInitialized
+  )) {
+    configureAction();
+  }
 });
 
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
@@ -43,4 +71,16 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   });
 
   return true;
+});
+
+chrome.action.onClicked.addListener(async () => {
+  const url = chrome.runtime.getURL("networthInitialization.html");
+  const [existingTab] = await chrome.tabs.query({ url });
+
+  if (existingTab) {
+    await chrome.tabs.update(existingTab.id, { active: true });
+    await chrome.windows.update(existingTab.windowId, { focused: true });
+  } else {
+    await chrome.tabs.create({ url });
+  }
 });
