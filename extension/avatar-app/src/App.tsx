@@ -1,7 +1,9 @@
 import { AvatarRenderer } from "./components/AvatarRenderer";
 import { CharacterCreator } from "./components/CharacterCreator";
+import { SignUp } from "./components/SignUp";
 import { useNetWorth } from "./lib/useNetWorth";
 import { useIdentity } from "./lib/useIdentity";
+import { useAccount } from "./lib/useAccount";
 import { getTier, WEALTH_LOADOUTS } from "./lib/wealthTiers";
 
 function formatCurrency(value: number) {
@@ -15,6 +17,7 @@ function formatCurrency(value: number) {
 export default function App() {
   const { netWorth, shortsWatched } = useNetWorth();
   const { identity, loaded, saveIdentity } = useIdentity();
+  const { account, loaded: accountLoaded, saveAccount } = useAccount();
 
   const handleCreate = async (newIdentity: Parameters<typeof saveIdentity>[0]) => {
     sessionStorage.setItem("avatarOnboardingHandled", "true");
@@ -32,8 +35,16 @@ export default function App() {
     color: "#f8fafc",
   };
 
-  if (!loaded) {
+  if (!loaded || !accountLoaded) {
     return <div style={{ width: 260, height: 260, ...wrapperStyle }} />;
+  }
+
+  if (!account) {
+    return (
+      <div style={wrapperStyle}>
+        <SignUp onSignUp={(name) => saveAccount({ name })} />
+      </div>
+    );
   }
 
   if (!identity) {
@@ -53,6 +64,7 @@ export default function App() {
     }
 
     await chrome.storage.local.remove([
+      "account",
       "identity",
       "avatarPreviewIdentity",
       "netWorth",
@@ -63,6 +75,11 @@ export default function App() {
       "isInitialized",
     ]);
     await chrome.action.setPopup({ popup: "popup/index.html" });
+    window.location.reload();
+  };
+
+  const handleLogout = async () => {
+    await chrome.storage.local.remove("account");
     window.location.reload();
   };
 
@@ -116,6 +133,7 @@ export default function App() {
         style={{
           width: "100%",
           padding: 8,
+          marginBottom: 8,
           border: "none",
           borderRadius: 6,
           background: "#1e293b",
@@ -125,6 +143,22 @@ export default function App() {
         }}
       >
         Reset
+      </button>
+
+      <button
+        onClick={handleLogout}
+        style={{
+          width: "100%",
+          padding: 8,
+          border: "1px solid #334155",
+          borderRadius: 6,
+          background: "transparent",
+          color: "#94a3b8",
+          cursor: "pointer",
+          fontSize: 12,
+        }}
+      >
+        Log out
       </button>
     </div>
   );
