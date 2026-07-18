@@ -23,9 +23,7 @@
   "content_scripts": [
     {
       "matches": [
-        "*://www.youtube.com/*",
-        "*://www.tiktok.com/*",
-        "*://www.instagram.com/*"
+        "<all_urls>"
       ],
       "js": ["content.js"],
       "run_at": "document_idle"
