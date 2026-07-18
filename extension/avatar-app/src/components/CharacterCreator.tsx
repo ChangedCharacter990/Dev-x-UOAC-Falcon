@@ -41,7 +41,7 @@ export function CharacterCreator({ onCreate }: CharacterCreatorProps) {
   }, [identity]);
 
   return (
-    <div style={{ width: 280, padding: 20, fontFamily: "system-ui, sans-serif" }}>
+    <div style={{ width: 280, margin: "0 auto", padding: 20, fontFamily: "system-ui, sans-serif" }}>
       <p
         style={{
           fontSize: 11,
