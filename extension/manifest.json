@@ -3,9 +3,8 @@
   "name": "Net Worth Predictor",
   "version": "0.1.0",
   "description": "Predicts your future net worth. Watch it drop every time you scroll a short.",
-  "permissions": ["storage"],
+  "permissions": ["storage","tabs"],
   "action": {
-    "default_popup": "popup.html",
     "default_icon": {
       "16": "icons/icon16.png",
       "48": "icons/icon48.png",
