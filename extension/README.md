@@ -9,9 +9,11 @@ Predicts your future net worth — and docks it every time you scroll a short (Y
 4. Open a Shorts/TikTok/Reels feed and start scrolling — click the toolbar icon to watch your net worth drop
 
 ## How it works
-- `content.js` detects when you view a new short:
+- `content.js` detects when you view a new short and renders the on-page feedback:
   - YouTube: watches for URL changes into `/shorts/...`
   - TikTok / Instagram: debounced scroll/wheel detection on the feed
+  - First short: a “Don’t you have anything better to do?” warning
+  - Later shorts: an animated net-worth card and loss indicator
 - `background.js` (service worker) holds net worth state in `chrome.storage.local` and updates the toolbar badge
 - `popup.html` / `popup.js` show the current net worth and a reset button
 
