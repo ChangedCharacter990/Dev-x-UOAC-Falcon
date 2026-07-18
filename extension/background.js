@@ -39,12 +39,13 @@ async function updateBadge(netWorth) {
 }
 
 async function configureAction() {
-  const { identity, isInitialized } = await chrome.storage.local.get([
+  const { account, identity, isInitialized } = await chrome.storage.local.get([
+    "account",
     "identity",
     "isInitialized",
   ]);
   await chrome.action.setPopup({
-    popup: !identity || isInitialized ? "popup/index.html" : "",
+    popup: !account || !identity || isInitialized ? "popup/index.html" : "",
   });
 
   if (isInitialized) {
@@ -71,7 +72,7 @@ chrome.storage.onChanged.addListener(async (changes, areaName) => {
     }
   }
 
-  if (changes.identity || changes.startingNetWorth || changes.isInitialized) {
+  if (changes.account || changes.identity || changes.startingNetWorth || changes.isInitialized) {
     await configureAction();
   }
 });
