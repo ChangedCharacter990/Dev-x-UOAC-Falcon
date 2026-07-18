@@ -15,7 +15,7 @@ function getUi() {
 
   host = document.createElement("div");
   host.id = UI_ID;
-  host.style.cssText = "position:fixed;right:28px;bottom:88px;z-index:2147483647;";
+  host.style.cssText = "position:fixed;right:28px;bottom:88px;z-index:2147483647;pointer-events:none;";
   host.attachShadow({ mode: "open" });
   host.shadowRoot.innerHTML = `
     <style>
@@ -23,7 +23,7 @@ function getUi() {
       * { box-sizing: border-box; }
       .ui { font-family: Inter, ui-sans-serif, system-ui, sans-serif; color: #fff; text-align: left; }
       .warning, .loop { box-shadow: 0 18px 50px rgba(0, 0, 0, .35); }
-      .warning { position: relative; width: min(330px, calc(100vw - 40px)); min-height: 82px; padding: 16px 42px 16px 76px; border: 1px solid rgba(251, 113, 133, .65); border-radius: 16px; background: linear-gradient(135deg, #451a1f, #1f1218); animation: enter .4s cubic-bezier(.2,.8,.2,1); }
+      .warning { position: relative; width: min(330px, calc(100vw - 40px)); min-height: 82px; padding: 16px 42px 16px 76px; border: 1px solid rgba(251, 113, 133, .65); border-radius: 16px; background: linear-gradient(135deg, #451a1f, #1f1218); animation: enter .4s cubic-bezier(.2,.8,.2,1); pointer-events: auto; }
       .eyebrow { color: #fda4af; font-size: 10px; font-weight: 800; letter-spacing: .14em; }
       .warning p { margin: 6px 0 0; color: #fff; font-size: 16px; font-weight: 750; line-height: 1.3; }
       .avatar { position: absolute; top: 18px; left: 18px; display: grid; width: 42px; height: 42px; place-items: center; border: 1px dashed #fda4af; border-radius: 50%; background: rgba(255,255,255,.08); color: #fecdd3; font-size: 10px; font-weight: 800; letter-spacing: .05em; }
