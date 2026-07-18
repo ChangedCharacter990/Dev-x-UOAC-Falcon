@@ -3,6 +3,7 @@ import { CharacterCreator } from "./components/CharacterCreator";
 import { SignUp } from "./components/SignUp";
 import { useNetWorth } from "./lib/useNetWorth";
 import { useIdentity } from "./lib/useIdentity";
+import { useAccount } from "./lib/useAccount";
 import { getScene, getTier } from "./lib/wealthTiers";
 
 function formatCurrency(value: number) {
@@ -29,13 +30,13 @@ export default function App() {
     window.close();
   };
 
-  if (!loaded) {
+  if (!loaded || !accountLoaded) {
     return <div className="arcade-loading" />;
   }
 
   if (!account) {
     return (
-      <div style={wrapperStyle}>
+      <div className="arcade-shell">
         <SignUp onSignUp={(name) => saveAccount({ name })} />
       </div>
     );
@@ -91,6 +92,7 @@ export default function App() {
           <div className="progress-track" aria-hidden="true"><span style={{ width: `${progress}%` }} /></div>
         </section>
         <button className="reset-button" onClick={handleReset}>Reset</button>
+        <button className="reset-button" onClick={handleLogout}>Log out</button>
       </main>
     </div>
   );
