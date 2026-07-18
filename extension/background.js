@@ -80,7 +80,7 @@ chrome.storage.onChanged.addListener(async (changes, areaName) => {
   }
 });
 
-chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === "TIME_SPENT") {
     if (!Number.isFinite(message.seconds) || message.seconds <= 0) return;
     getState().then(async ({ netWorth, timeSpentSeconds, uncreditedWebsiteSeconds }) => {
@@ -105,14 +105,8 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
 
   chrome.storage.local.get("identity").then(async ({ identity }) => {
     if (!identity) {
-      const url = chrome.runtime.getURL("popup/index.html");
-      const [existingTab] = await chrome.tabs.query({ url });
-      if (existingTab) {
-        await chrome.tabs.update(existingTab.id, { active: true });
-        await chrome.windows.update(existingTab.windowId, { focused: true });
-      } else {
-        await chrome.tabs.create({ url });
-      }
+      await chrome.action.setPopup({ popup: "popup/index.html" });
+      await chrome.action.openPopup({ windowId: sender.tab?.windowId });
       sendResponse({ requiresAvatar: true });
       return;
     }
