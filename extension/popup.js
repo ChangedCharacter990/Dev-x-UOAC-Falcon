@@ -42,19 +42,22 @@ document.getElementById("reset").addEventListener("click", async () => {
     "startingNetWorth",
     "shortsWatched",
     "isInitialized",
+    "timeSpentSeconds",
+    "uncreditedWebsiteSeconds",
   ]);
   await chrome.action.setPopup({ popup: "" });
   await chrome.tabs.create({
     url: chrome.runtime.getURL("networthInitialization.html"),
-   /*
-  await chrome.storage.local.set({
-    netWorth: STARTING_NET_WORTH,
-    shortsWatched: 0,
-    timeSpentSeconds: 0,
-    uncreditedWebsiteSeconds: 0,
   });
-  */
   window.close();
+});
+
+chrome.storage.onChanged.addListener((changes, areaName) => {
+  if (areaName === "local" && (
+    changes.netWorth || changes.startingNetWorth || changes.shortsWatched || changes.timeSpentSeconds
+  )) {
+    render();
+  }
 });
 
 render();
