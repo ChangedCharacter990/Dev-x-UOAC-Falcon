@@ -294,17 +294,43 @@ function watchYouTubeShorts() {
   }).observe(document.body, { childList: true, subtree: true });
 }
 
-function watchScrollFeed(matchesUrl) {
+// Counts a short the instant its <video> becomes majority-visible, instead
+// of waiting for scrolling to stop — catches touch/swipe/keyboard navigation
+// too, not just wheel events, so detection isn't tied to one input method
+// or a fixed debounce delay.
+function watchVideoVisibility(matchesUrl) {
   if (!matchesUrl(location.hostname)) return;
-  let debounce = null;
-  window.addEventListener(
-    "wheel",
-    () => {
-      clearTimeout(debounce);
-      debounce = setTimeout(reportShortScrolled, 400);
+
+  const counted = new WeakSet();
+  const observer = new IntersectionObserver(
+    (entries) => {
+      for (const entry of entries) {
+        if (!entry.isIntersecting || entry.intersectionRatio < 0.75) continue;
+        if (counted.has(entry.target)) continue;
+        counted.add(entry.target);
+        reportShortScrolled();
+      }
     },
-    { passive: true }
+    { threshold: [0.75] }
   );
+
+  function observeVideo(video) {
+    if (video.dataset.nwpObserved) return;
+    video.dataset.nwpObserved = "true";
+    observer.observe(video);
+  }
+
+  document.querySelectorAll("video").forEach(observeVideo);
+
+  new MutationObserver((mutations) => {
+    for (const mutation of mutations) {
+      for (const node of mutation.addedNodes) {
+        if (!(node instanceof HTMLElement)) continue;
+        if (node.tagName === "VIDEO") observeVideo(node);
+        node.querySelectorAll?.("video").forEach(observeVideo);
+      }
+    }
+  }).observe(document.body, { childList: true, subtree: true });
 }
 
 if (!isExcludedTimeTrackingSite(location.hostname)) {
@@ -315,5 +341,5 @@ if (!isExcludedTimeTrackingSite(location.hostname)) {
   location.hostname.includes("tiktok.com") ||
   location.hostname.includes("instagram.com")
 ) {
-  watchScrollFeed(() => true);
+  watchVideoVisibility(() => true);
 }
