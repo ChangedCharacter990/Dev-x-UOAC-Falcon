@@ -1,3 +1,13 @@
+
+window.onload = function () {
+  console.log("1sign-in");
+    chrome.identity.getAuthToken({ interactive: true }, function (token) {
+      console.log(token);
+    });
+};
+
+
+
 chrome.storage.onChanged.addListener(async (changes, areaName) => {
   if (areaName !== "local" || !changes.identity?.newValue) return;
 
