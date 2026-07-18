@@ -2,6 +2,122 @@ function fmt(n) {
   return '$' + Math.round(n).toLocaleString();
 }
 
+// ---- Step 1: character creator ----
+// Mirrors extension/avatar-app/src/lib/identityOptions.ts — keep in sync.
+const BODY_CHOICES = [
+  { value: 'male', label: 'Masc' },
+  { value: 'female', label: 'Femme' },
+];
+const HAIR_STYLE_CHOICES = [
+  { value: 'plain', label: 'Plain' },
+  { value: 'buzzcut', label: 'Buzzcut' },
+  { value: 'afro', label: 'Afro' },
+  { value: 'curly_short', label: 'Curly' },
+  { value: 'dreadlocks_short', label: 'Dreads' },
+  { value: 'long_straight', label: 'Long' },
+  { value: 'spiked', label: 'Spiked' },
+  { value: 'cornrows', label: 'Cornrows' },
+  { value: 'bald', label: 'Bald' },
+];
+const HAIR_COLOR_CHOICES = [
+  { value: 'raven', swatch: '#26232c' },
+  { value: 'dark_brown', swatch: '#4f3824' },
+  { value: 'blonde', swatch: '#e2bc60' },
+  { value: 'ginger', swatch: '#b5541c' },
+];
+const SKIN_TONE_CHOICES = [
+  { value: 'light', swatch: '#f9d5ba' },
+  { value: 'amber', swatch: '#fdd082' },
+  { value: 'olive', swatch: '#d38b59' },
+  { value: 'bronze', swatch: '#ae6b3f' },
+  { value: 'brown', swatch: '#9c663e' },
+  { value: 'black', swatch: '#603429' },
+];
+
+const identity = {
+  body: 'male',
+  skin: 'olive',
+  hairStyle: 'plain',
+  hairColor: 'dark_brown',
+};
+
+// Mirrors extension/avatar-app/src/lib/wealthTiers.ts layerPaths() for the
+// "average" tier preview shown during character creation.
+function previewLayerPaths() {
+  const layers = [`popup/sprites/identity/base_${identity.body}_${identity.skin}.png`];
+  layers.push(`popup/sprites/wealth/average/pants_${identity.body}.png`);
+  layers.push(`popup/sprites/wealth/average/shoes_${identity.body}.png`);
+  layers.push(`popup/sprites/wealth/average/shirt_${identity.body}.png`);
+  if (identity.hairStyle !== 'bald') {
+    layers.push(`popup/sprites/identity/hair_${identity.hairStyle}_${identity.hairColor}.png`);
+  }
+  return layers;
+}
+
+function renderAvatarPreview() {
+  const preview = document.getElementById('avatar-preview');
+  preview.innerHTML = '';
+  previewLayerPaths().forEach((src) => {
+    const img = document.createElement('img');
+    img.src = src;
+    img.alt = '';
+    preview.appendChild(img);
+  });
+}
+
+function renderOptionButtons(containerId, choices, key) {
+  const container = document.getElementById(containerId);
+  container.innerHTML = '';
+  choices.forEach(({ value, label }) => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'option-btn' + (identity[key] === value ? ' active' : '');
+    btn.textContent = label;
+    btn.addEventListener('click', () => {
+      identity[key] = value;
+      renderOptionButtons(containerId, choices, key);
+      renderAvatarPreview();
+    });
+    container.appendChild(btn);
+  });
+}
+
+function renderSwatchButtons(containerId, choices, key) {
+  const container = document.getElementById(containerId);
+  container.innerHTML = '';
+  choices.forEach(({ value, swatch }) => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'swatch-btn' + (identity[key] === value ? ' active' : '');
+    btn.style.background = swatch;
+    btn.setAttribute('aria-label', `${key} ${value}`);
+    btn.addEventListener('click', () => {
+      identity[key] = value;
+      renderSwatchButtons(containerId, choices, key);
+      renderAvatarPreview();
+    });
+    container.appendChild(btn);
+  });
+}
+
+function initCharacterCreator() {
+  renderOptionButtons('body-options', BODY_CHOICES, 'body');
+  renderOptionButtons('hair-style-options', HAIR_STYLE_CHOICES, 'hairStyle');
+  renderSwatchButtons('hair-color-options', HAIR_COLOR_CHOICES, 'hairColor');
+  renderSwatchButtons('skin-options', SKIN_TONE_CHOICES, 'skin');
+  renderAvatarPreview();
+}
+
+document.getElementById('continue-button').addEventListener('click', () => {
+  document.getElementById('step-character').style.display = 'none';
+  document.getElementById('step-estimator').style.display = 'block';
+  document.getElementById('step-indicator-1').classList.remove('active');
+  document.getElementById('step-indicator-2').classList.add('active');
+  project();
+});
+
+initCharacterCreator();
+
 const ids = ['start','salary','savings-rate','annual-raise','promo-bump','promo-freq','rate','years'];
 const el = {};
 ids.forEach(id => el[id] = document.getElementById(id));
@@ -135,6 +251,7 @@ document.getElementById('start-button').addEventListener('click', async () => {
     startingNetWorth: projectedNetWorth,
     shortsWatched: 0,
     isInitialized: true,
+    identity,
   });
   await chrome.action.setPopup({ popup: 'popup/index.html' });
 
@@ -143,5 +260,3 @@ document.getElementById('start-button').addEventListener('click', async () => {
     await chrome.tabs.remove(currentTab.id);
   }
 });
-
-project();
