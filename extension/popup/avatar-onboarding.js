@@ -1,5 +1,8 @@
 chrome.storage.onChanged.addListener(async (changes, areaName) => {
   if (areaName !== "local" || !changes.identity?.newValue) return;
+
+  // The source app performs this handoff itself. This branch supports the
+  // already-built popup until the avatar app is rebuilt.
   if (sessionStorage.getItem("avatarOnboardingHandled")) return;
 
   await chrome.action.setPopup({ popup: "" });

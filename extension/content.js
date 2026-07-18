@@ -17,6 +17,17 @@ function getTier(netWorth) {
   return "poor";
 }
 
+function getScene(netWorth) {
+  if (netWorth >= 1_000_000) return { file: "01-yacht.png", x: 20, bottom: 4 };
+  if (netWorth >= 425_000) return { file: "02-house-mansion.png", x: 50, bottom: 3 };
+  if (netWorth >= 250_000) return { file: "03-supercar.png", x: 22, bottom: 4 };
+  if (netWorth >= 100_000) return { file: "04-office-building.png", x: 50, bottom: 3 };
+  if (netWorth >= 25_000) return { file: "05-fast-food-store.png", x: 50, bottom: 3 };
+  if (netWorth > 0) return { file: "06-makeshift-shack.png", x: 75, bottom: 3 };
+  if (netWorth === 0) return { file: "07-tent.png", x: 52, bottom: 3 };
+  return { file: "08-dumpster.png", x: 16, bottom: 3 };
+}
+
 const WEALTH_SLOTS = {
   poor: [{ slot: "pants" }, { slot: "shirt" }],
   average: [{ slot: "pants" }, { slot: "shoes" }, { slot: "shirt" }],
@@ -60,15 +71,29 @@ async function renderPortraitAvatar(portraitEl, netWorth) {
   const displayIdentity = identity ?? avatarPreviewIdentity;
   if (!displayIdentity) return; // no character created yet — keep the placeholder
 
-  portraitEl.innerHTML = "";
   const tier = getTier(netWorth);
+  const isScene = portraitEl.classList.contains("portrait");
+  const target = isScene ? document.createElement("div") : portraitEl;
+
+  portraitEl.innerHTML = "";
+  if (isScene) {
+    const scene = getScene(netWorth);
+    portraitEl.style.setProperty(
+      "--scene-image",
+      `url("${chrome.runtime.getURL(`popup/backgrounds/${scene.file}`)}")`
+    );
+    target.className = "scene-avatar";
+    target.style.left = `${scene.x}%`;
+    target.style.bottom = `${scene.bottom}%`;
+    portraitEl.appendChild(target);
+  }
   for (const src of layerPaths(displayIdentity, tier)) {
     const img = document.createElement("img");
     img.src = src;
     img.alt = "";
     img.style.cssText =
       "position:absolute;inset:0;width:100%;height:100%;image-rendering:pixelated;";
-    portraitEl.appendChild(img);
+    target.appendChild(img);
   }
 }
 
@@ -109,25 +134,34 @@ function getUi() {
       .warning p { margin: 6px 0 0; color: #fff; font-size: 16px; font-weight: 750; line-height: 1.3; }
       .avatar { position: absolute; top: 18px; left: 18px; display: grid; width: 42px; height: 42px; place-items: center; overflow: hidden; border: 1px dashed #fda4af; border-radius: 50%; background: rgba(255,255,255,.08); color: #fecdd3; font-size: 10px; font-weight: 800; letter-spacing: .05em; }
       .close { position: absolute; top: 10px; right: 10px; border: 0; border-radius: 50%; width: 25px; height: 25px; background: rgba(255,255,255,.1); color: #fff; cursor: pointer; font-size: 18px; line-height: 20px; }
-      .loop { display: none; width: 892px; height: 1764px; overflow: hidden; border: 1px solid rgba(251, 113, 133, .8); border-radius: 42px; background: #190d13; transform: scale(.2); transform-origin: right bottom; }
-      .loop.visible { display: flex; flex-direction: column; animation: card-enter .35s cubic-bezier(.2,.8,.2,1); }
+      .loop { position: relative; display: none; width: 350px; min-height: 532px; padding: 33px 30px 30px; overflow: hidden; color: #f2bb45; background: radial-gradient(circle at 50% 0%, #243b51 0%, #102033 43%, #08121e 100%); font-family: ui-monospace, "Cascadia Code", "Courier New", monospace; text-align: center; border: 3px solid currentColor; outline: 2px solid #07101a; outline-offset: -7px; box-shadow: inset 0 0 0 2px #745520, 0 8px 18px rgba(0,0,0,.45); pointer-events: auto; }
+      .loop::before, .loop::after { position: absolute; color: currentColor; font-size: 26px; line-height: 1; } .loop::before { content: "⌜"; top: 4px; left: 7px; } .loop::after { content: "⌟"; right: 7px; bottom: 3px; }
+      .loop.visible { display: block; animation: card-enter .35s cubic-bezier(.2,.8,.2,1); }
       .loop.hit { animation: card-hit .6s ease both; }
-      .portrait { position: relative; display: grid; height: 900px; flex: 0 0 900px; place-items: center; overflow: hidden; background: linear-gradient(145deg, #fff7ed, #f4d9d2); border-bottom: 1px solid rgba(251, 113, 133, .35); }
-      .portrait::before, .portrait::after { position: absolute; width: 520px; height: 520px; border: 5px solid rgba(76, 17, 31, .1); border-radius: 50%; content: ""; }
-      .portrait::before { transform: translate(-270px, -300px); }
-      .portrait::after { transform: translate(300px, 330px); }
-      .portrait svg { position: relative; z-index: 1; width: 390px; height: 390px; filter: drop-shadow(0 22px 18px rgba(76,17,31,.12)); }
-      .portrait-label { position: absolute; z-index: 1; bottom: 58px; left: 0; width: 100%; color: #6b1c2a; font-size: 32px; font-weight: 900; letter-spacing: .16em; text-align: center; }
-      .top { height: 520px; flex: 0 0 520px; padding: 82px 72px 54px; background: linear-gradient(105deg, #4c111f, #2a1018); }
-      .label { display: block; color: #fecdd3; font-size: 36px; font-weight: 800; letter-spacing: .14em; }
-      .worth { display: block; margin-top: 24px; color: #fff1f2; font-size: 128px; font-weight: 800; letter-spacing: -.04em; }
-      .details { height: 344px; flex: 0 0 344px; display: flex; align-items: center; justify-content: space-between; padding: 70px 72px; color: #fda4af; font-size: 36px; font-weight: 700; }
+      .loop-title, .label, .reset { text-transform: uppercase; letter-spacing: .055em; text-shadow: 2px 2px 0 #09121d; }
+      .loop-title { margin: 0 0 17px; font-size: 20px; line-height: 1; }
+      .portrait { position: relative; height: 193px; overflow: hidden; border: 4px solid #07101a; background: var(--scene-image) center / cover, #172434; box-shadow: 0 0 0 2px rgba(0,0,0,.55), inset 0 0 0 2px rgba(255,255,255,.08); }
+      .scene-avatar { position: absolute; width: 76px; height: 76px; transform: translateX(-50%); }
+      .scene-avatar img { position: absolute; inset: 0; width: 100%; height: 100%; image-rendering: pixelated; }
+      .top { padding: 17px 0 12px; }
+      .label { display: block; color: currentColor; font-size: 16px; font-weight: 800; }
+      .worth { display: block; margin: 6px 0 19px; color: currentColor; font-size: 46px; font-weight: 900; letter-spacing: -.08em; line-height: .92; }
+      .details { padding: 0; }
+      .details::before { display: block; color: currentColor; font-size: 15px; font-weight: 800; letter-spacing: .055em; text-transform: uppercase; text-shadow: 2px 2px 0 #09121d; content: "SHORTS WATCHED"; }
+      .details::after { display: block; height: 15px; margin: 12px 4px 17px; border: 3px solid #081018; background: linear-gradient(to right, currentColor var(--progress, 6%), #172434 var(--progress, 6%)); box-shadow: inset 0 0 0 1px #745520; content: ""; }
+      .count-label { display: block; color: currentColor; font-size: 15px; font-weight: 800; letter-spacing: .055em; text-transform: uppercase; text-shadow: 2px 2px 0 #09121d; }
+      .count { display: block; margin: 5px 0 12px; color: #fff7df; font-size: 29px; font-weight: 800; line-height: 1; }
+      .progress { height: 15px; margin: 0 4px 17px; overflow: hidden; border: 3px solid #081018; background: #172434; box-shadow: inset 0 0 0 1px #745520; } .progress span { display: block; height: 100%; background: currentColor; box-shadow: inset 0 -3px rgba(0,0,0,.22); }
+      .loss-label { display: none; }
+      .reset { width: 170px; padding: 9px 12px 7px; color: inherit; font-size: 20px; font-weight: 900; cursor: pointer; background: #172434; border: 3px solid #07101a; box-shadow: inset 0 0 0 2px #745520, 3px 3px 0 #07101a; }
+      .reset:hover { background: #263a50; }
+      .loop.tier-successful { color: #e37c73; background: radial-gradient(circle at 50% 0%, #482631, #241923 49%, #120d14); } .loop.tier-average { color: #a2a978; background: radial-gradient(circle at 50% 0%, #374333, #202a21 49%, #101711); } .loop.tier-poor { color: #a8b2bc; background: radial-gradient(circle at 50% 0%, #253340, #17212a 49%, #0d141a); } .loop.is-negative { color: #df674e; }
       .loss { position: fixed; right: 18px; bottom: 110px; display: none; color: #fb7185; font-family: Inter, ui-sans-serif, system-ui, sans-serif; font-size: 22px; font-weight: 900; text-shadow: 0 3px 12px rgba(0,0,0,.7); pointer-events: none; }
       .loss.show { display: block; animation: loss 1.25s ease-out forwards; }
       @keyframes enter { from { opacity: 0; transform: translateY(16px) scale(.96); } to { opacity: 1; transform: translateY(0) scale(1); } }
       @keyframes hit { 0%, 100% { transform: translateX(0); border-color: rgba(251,113,133,.8); } 20%, 60% { transform: translateX(-7px); } 40%, 80% { transform: translateX(7px); } 50% { border-color: #fff; } }
-      @keyframes card-enter { from { opacity: 0; transform: translateY(80px) scale(.2); } to { opacity: 1; transform: translateY(0) scale(.2); } }
-      @keyframes card-hit { 0%, 100% { transform: translateX(0) scale(.2); border-color: rgba(251,113,133,.8); } 20%, 60% { transform: translateX(-35px) scale(.2); } 40%, 80% { transform: translateX(35px) scale(.2); } 50% { border-color: #fff; } }
+      @keyframes card-enter { from { opacity: 0; transform: translateY(28px) scale(.96); } to { opacity: 1; transform: translateY(0) scale(1); } }
+      @keyframes card-hit { 0%, 100% { transform: translateX(0); } 20%, 60% { transform: translateX(-7px); } 40%, 80% { transform: translateX(7px); } }
       @keyframes loss { 0% { opacity: 0; transform: translateY(12px) scale(.85); } 20% { opacity: 1; } 100% { opacity: 0; transform: translateY(-68px) scale(1.12); } }
       @media (max-width: 480px) { .warning { width: calc(100vw - 28px); } }
     </style>
@@ -139,6 +173,7 @@ function getUi() {
         <button class="close" aria-label="Dismiss notification">×</button>
       </section>
       <section class="loop" aria-live="polite">
+        <h2 class="loop-title">Net Worth Predictor</h2>
         <div class="portrait" aria-label="Future self placeholder image">
           <svg viewBox="0 0 100 100" role="img" aria-label="Future self placeholder">
             <circle cx="50" cy="31" r="16" fill="none" stroke="#6b1c2a" stroke-width="4" />
@@ -154,6 +189,18 @@ function getUi() {
 
   host.shadowRoot.querySelector(".close").addEventListener("click", () => {
     host.shadowRoot.querySelector(".warning").remove();
+  });
+  host.shadowRoot.querySelector(".loop").insertAdjacentHTML(
+    "beforeend",
+    '<button class="reset" type="button">Reset</button>'
+  );
+  host.shadowRoot.querySelector(".reset").addEventListener("click", async () => {
+    if (!window.confirm("Reset all saved data? Your avatar and net-worth setup will be erased.")) return;
+    await chrome.storage.local.remove([
+      "identity", "avatarPreviewIdentity", "netWorth", "startingNetWorth",
+      "shortsWatched", "timeSpentSeconds", "uncreditedWebsiteSeconds", "isInitialized",
+    ]);
+    host.remove();
   });
   document.documentElement.append(host);
   return host.shadowRoot;
@@ -176,7 +223,14 @@ function showConsequence({ netWorth, shortsWatched, loss }) {
   renderPortraitAvatar(loop.querySelector(".portrait"), netWorth);
   loop.querySelector(".worth").textContent = formatCurrency(netWorth);
   loop.querySelector(".loss-label").textContent = `−${formatCurrency(loss)} this scroll`;
-  loop.querySelector(".count").textContent = `${shortsWatched} shorts watched`;
+  loop.querySelector(".count").textContent = shortsWatched.toLocaleString("en-US");
+  loop.querySelector(".details").style.setProperty(
+    "--progress",
+    `${Math.min(100, Math.max(6, Math.round(shortsWatched / 5)))}%`
+  );
+  loop.classList.remove("tier-poor", "tier-average", "tier-successful", "tier-wealthy", "is-negative");
+  loop.classList.add(`tier-${getTier(netWorth)}`);
+  if (netWorth < 0) loop.classList.add("is-negative");
   loop.classList.add("visible");
   loop.classList.remove("hit");
   void loop.offsetWidth;
