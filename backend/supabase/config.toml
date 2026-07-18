@@ -1,0 +1,2 @@
+[functions.sync-net-worth]
+verify_jwt = false

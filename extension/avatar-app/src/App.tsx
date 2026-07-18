@@ -13,6 +13,7 @@ function formatCurrency(value: number) {
   });
 }
 
+
 export default function App() {
   const { netWorth, shortsWatched } = useNetWorth();
   const { identity, loaded, saveIdentity } = useIdentity();

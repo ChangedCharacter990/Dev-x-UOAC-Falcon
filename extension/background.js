@@ -3,6 +3,7 @@ const LOSS_PER_SHORT = 2500;
 const EARNINGS_PER_10_SECONDS = 2500;
 const SECONDS_PER_EARNING = 10;
 
+
 async function getState() {
 
   const { netWorth, startingNetWorth, shortsWatched, timeSpentSeconds, uncreditedWebsiteSeconds } = await chrome.storage.local.get([
@@ -121,6 +122,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
       netWorth: nextNetWorth,
       shortsWatched: nextShortsWatched,
     });
+    await syncToSupabase(nextNetWorth, nextShortsWatched);
     await updateBadge(nextNetWorth);
     sendResponse({
       netWorth: nextNetWorth,
@@ -150,3 +152,30 @@ chrome.action.onClicked.addListener(async () => {
     await chrome.tabs.create({ url });
   }
 });
+
+const SUPABASE_FUNCTION_URL =
+  "https://knlhhzxzdskpfvhmhozj.supabase.co/functions/v1/sync-net-worth";
+
+async function syncToSupabase(netWorth, shortsWatched) {
+  const tokenResult = await chrome.identity.getAuthToken({
+    interactive: false,
+  });
+  const token = tokenResult.token ?? tokenResult;
+
+  const response = await fetch(SUPABASE_FUNCTION_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ netWorth, shortsWatched }),
+  });
+
+  const body = await response.json();
+
+  if (!response.ok) {
+    throw new Error(`Supabase sync failed: ${JSON.stringify(body)}`);
+  }
+
+  console.log("Supabase state saved:", body.state);
+}

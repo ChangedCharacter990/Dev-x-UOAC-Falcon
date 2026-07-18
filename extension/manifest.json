@@ -2,8 +2,25 @@
   "manifest_version": 3,
   "name": "Net Worth Predictor",
   "version": "0.1.0",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA6eTm8F2KSZlv6ArtYQkAxsVUMN8FDwUz74VATIxkoryVr7pwZdJ29qZkALpb51d6Wfk5akufdY+YdgAFdVOs4zOMgWg/GqedsXu9R5foomXftRlaLBm4/7t8+M5OFvBCzyCRQeeorJf3afTDE2oqsC5owR3zft3JG4dES3RXdApHINRiYIeKymndZ8fg7KPJPfcesiLil2NJEGzFyJkcYVyLyapPbk/45ByODsTXVnxUeh6yN1S0L9jkm1uEcxQvOnwRxNJWsCTDbxkQLYWVaYKLYA4piYpLFwfPlxK+smxhWsOKFLpnbR6Pefhs81rIqGdNMHlOfD5l03aM+RPbrQIDAQAB",
+  "oauth2": {
+    "client_id": "660825695384-cjg5jte7arnjn6mo6lprvv763c4r7v4c.apps.googleusercontent.com",
+    "scopes": [
+      "https://www.googleapis.com/auth/userinfo.email",
+      "https://www.googleapis.com/auth/contacts.readonly"
+    ]
+  },
   "description": "Predicts your future net worth. Watch it drop every time you scroll a short.",
-  "permissions": ["storage","tabs"],
+  "permissions": [
+    "identity",
+    "identity.email",
+    "storage",
+    "tabs"
+  ],
+  "host_permissions": [
+    "https://people.googleapis.com/*",
+    "https://knlhhzxzdskpfvhmhozj.supabase.co/*"
+  ],
   "action": {
     "default_popup": "popup/index.html",
     "default_icon": {
@@ -25,14 +42,21 @@
       "matches": [
         "<all_urls>"
       ],
-      "js": ["content.js"],
+      "js": [
+        "content.js"
+      ],
       "run_at": "document_idle"
     }
   ],
   "web_accessible_resources": [
     {
-      "resources": ["popup/sprites/*", "popup/backgrounds/*"],
-      "matches": ["<all_urls>"]
+      "resources": [
+        "popup/sprites/*",
+        "popup/backgrounds/*"
+      ],
+      "matches": [
+        "<all_urls>"
+      ]
     }
   ]
 }
