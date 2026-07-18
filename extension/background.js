@@ -38,6 +38,15 @@ async function updateBadge(netWorth) {
   });
 }
 
+chrome.runtime.onInstalled.addListener(async () => {
+  const { netWorth } = await getState();
+  // Clamp balances stored by older versions with a higher starting net worth,
+  // otherwise per-short losses are invisible against the leftover balance.
+  const clamped = Math.min(netWorth, STARTING_NET_WORTH);
+  if (clamped !== netWorth) {
+    await chrome.storage.local.set({ netWorth: clamped });
+  }
+  await updateBadge(clamped);
 async function configureAction() {
   const { isInitialized } = await chrome.storage.local.get("isInitialized");
   await chrome.action.setPopup({
@@ -88,7 +97,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   if (message.type !== "SHORT_SCROLLED") return;
 
   getState().then(async ({ netWorth, shortsWatched }) => {
-    const nextNetWorth = Math.max(netWorth - LOSS_PER_SHORT, -500000);
+    const nextNetWorth = Math.max(netWorth - LOSS_PER_SHORT, -5000);
     const nextShortsWatched = shortsWatched + 1;
     await chrome.storage.local.set({
       netWorth: nextNetWorth,

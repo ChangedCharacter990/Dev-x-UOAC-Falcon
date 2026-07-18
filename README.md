@@ -3,7 +3,7 @@
 Devs x UOAC Hackathon
 
 ## Theme
-TBD — update once announced.
+Back to the Future
 
 ## Structure
 - `extension/` — Chrome extension: Net Worth Predictor (docks your future net worth every time you scroll a short)
@@ -28,4 +28,4 @@ TBD — update once announced.
 See `extension/README.md` for details on how detection works and how to tune it.
 
 ## Team
-- TBD
+Team Falcons
