@@ -132,9 +132,11 @@ export function CharacterCreator({ onCreate }: CharacterCreatorProps) {
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div style={{ marginBottom: 12 }}>
+    <div style={{ marginBottom: 12, textAlign: "center" }}>
       <p style={{ fontSize: 11, color: "#94a3b8", margin: "0 0 6px" }}>{label}</p>
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>{children}</div>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 6, justifyContent: "center" }}>
+        {children}
+      </div>
     </div>
   );
 }
