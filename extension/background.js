@@ -39,7 +39,11 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
       shortsWatched: nextShortsWatched,
     });
     await updateBadge(nextNetWorth);
-    sendResponse({ netWorth: nextNetWorth, shortsWatched: nextShortsWatched });
+    sendResponse({
+      netWorth: nextNetWorth,
+      shortsWatched: nextShortsWatched,
+      loss: LOSS_PER_SHORT,
+    });
   });
 
   return true;
