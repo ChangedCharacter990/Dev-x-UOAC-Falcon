@@ -1,7 +1,9 @@
 import { AvatarRenderer } from "./components/AvatarRenderer";
 import { CharacterCreator } from "./components/CharacterCreator";
+import { SignUp } from "./components/SignUp";
 import { useNetWorth } from "./lib/useNetWorth";
 import { useIdentity } from "./lib/useIdentity";
+import { useAccount } from "./lib/useAccount";
 import { getTier, WEALTH_LOADOUTS } from "./lib/wealthTiers";
 
 function formatCurrency(value: number) {
@@ -15,6 +17,7 @@ function formatCurrency(value: number) {
 export default function App() {
   const { netWorth, shortsWatched } = useNetWorth();
   const { identity, loaded, saveIdentity } = useIdentity();
+  const { account, loaded: accountLoaded, saveAccount } = useAccount();
 
   const handleCreate = async (newIdentity: Parameters<typeof saveIdentity>[0]) => {
     sessionStorage.setItem("avatarOnboardingHandled", "true");
@@ -32,8 +35,16 @@ export default function App() {
     color: "#f8fafc",
   };
 
-  if (!loaded) {
+  if (!loaded || !accountLoaded) {
     return <div style={{ width: 260, height: 260, ...wrapperStyle }} />;
+  }
+
+  if (!account) {
+    return (
+      <div style={wrapperStyle}>
+        <SignUp onSignUp={(name) => saveAccount({ name })} />
+      </div>
+    );
   }
 
   if (!identity) {
@@ -53,6 +64,7 @@ export default function App() {
     }
 
     await chrome.storage.local.remove([
+      "account",
       "identity",
       "avatarPreviewIdentity",
       "netWorth",
