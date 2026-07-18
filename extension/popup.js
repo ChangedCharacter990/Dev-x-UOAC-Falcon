@@ -37,6 +37,7 @@ document.getElementById("reset").addEventListener("click", async () => {
     netWorth: STARTING_NET_WORTH,
     shortsWatched: 0,
     timeSpentSeconds: 0,
+    uncreditedWebsiteSeconds: 0,
   });
   await render();
 });
