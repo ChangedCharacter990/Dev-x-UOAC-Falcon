@@ -5,7 +5,7 @@
   "description": "Predicts your future net worth. Watch it drop every time you scroll a short.",
   "permissions": ["storage"],
   "action": {
-    "default_popup": "popup/index.html",
+    "default_popup": "popup.html",
     "default_icon": {
       "16": "icons/icon16.png",
       "48": "icons/icon48.png",
@@ -23,9 +23,7 @@
   "content_scripts": [
     {
       "matches": [
-        "*://www.youtube.com/*",
-        "*://www.tiktok.com/*",
-        "*://www.instagram.com/*"
+        "<all_urls>"
       ],
       "js": ["content.js"],
       "run_at": "document_idle"
