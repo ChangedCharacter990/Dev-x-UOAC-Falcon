@@ -53,12 +53,16 @@ function layerPaths(identity, tier) {
 }
 
 async function renderPortraitAvatar(portraitEl, netWorth) {
-  const { identity } = await chrome.storage.local.get(["identity"]);
-  if (!identity) return; // no character created yet — keep the placeholder
+  const { identity, avatarPreviewIdentity } = await chrome.storage.local.get([
+    "identity",
+    "avatarPreviewIdentity",
+  ]);
+  const displayIdentity = identity ?? avatarPreviewIdentity;
+  if (!displayIdentity) return; // no character created yet — keep the placeholder
 
   portraitEl.innerHTML = "";
   const tier = getTier(netWorth);
-  for (const src of layerPaths(identity, tier)) {
+  for (const src of layerPaths(displayIdentity, tier)) {
     const img = document.createElement("img");
     img.src = src;
     img.alt = "";
@@ -67,6 +71,24 @@ async function renderPortraitAvatar(portraitEl, netWorth) {
     portraitEl.appendChild(img);
   }
 }
+
+function refreshVisibleAvatars() {
+  const avatars = document.getElementById(UI_ID)?.shadowRoot
+    ?.querySelectorAll(".avatar, .loop.visible .portrait");
+  if (!avatars?.length) return;
+
+  chrome.storage.local.get(["netWorth", "startingNetWorth"], ({ netWorth, startingNetWorth }) => {
+    avatars.forEach((avatar) => {
+      renderPortraitAvatar(avatar, netWorth ?? startingNetWorth ?? 0);
+    });
+  });
+}
+
+chrome.storage.onChanged.addListener((changes, areaName) => {
+  if (areaName === "local" && (changes.identity || changes.avatarPreviewIdentity)) {
+    refreshVisibleAvatars();
+  }
+});
 
 function getUi() {
   let host = document.getElementById(UI_ID);
@@ -85,7 +107,7 @@ function getUi() {
       .warning { position: relative; width: min(330px, calc(100vw - 40px)); min-height: 82px; padding: 16px 42px 16px 76px; border: 1px solid rgba(251, 113, 133, .65); border-radius: 16px; background: linear-gradient(135deg, #451a1f, #1f1218); animation: enter .4s cubic-bezier(.2,.8,.2,1); pointer-events: auto; }
       .eyebrow { color: #fda4af; font-size: 10px; font-weight: 800; letter-spacing: .14em; }
       .warning p { margin: 6px 0 0; color: #fff; font-size: 16px; font-weight: 750; line-height: 1.3; }
-      .avatar { position: absolute; top: 18px; left: 18px; display: grid; width: 42px; height: 42px; place-items: center; border: 1px dashed #fda4af; border-radius: 50%; background: rgba(255,255,255,.08); color: #fecdd3; font-size: 10px; font-weight: 800; letter-spacing: .05em; }
+      .avatar { position: absolute; top: 18px; left: 18px; display: grid; width: 42px; height: 42px; place-items: center; overflow: hidden; border: 1px dashed #fda4af; border-radius: 50%; background: rgba(255,255,255,.08); color: #fecdd3; font-size: 10px; font-weight: 800; letter-spacing: .05em; }
       .close { position: absolute; top: 10px; right: 10px; border: 0; border-radius: 50%; width: 25px; height: 25px; background: rgba(255,255,255,.1); color: #fff; cursor: pointer; font-size: 18px; line-height: 20px; }
       .loop { display: none; width: 892px; height: 1764px; overflow: hidden; border: 1px solid rgba(251, 113, 133, .8); border-radius: 42px; background: #190d13; transform: scale(.2); transform-origin: right bottom; }
       .loop.visible { display: flex; flex-direction: column; animation: card-enter .35s cubic-bezier(.2,.8,.2,1); }
@@ -142,6 +164,7 @@ function showConsequence({ netWorth, shortsWatched, loss }) {
   const warning = ui.querySelector(".warning");
   const loop = ui.querySelector(".loop");
   const lossEl = ui.querySelector(".loss");
+  renderPortraitAvatar(ui.querySelector(".avatar"), netWorth);
 
   scrollsThisVisit += 1;
   if (scrollsThisVisit === 1) {
@@ -168,6 +191,7 @@ function showConsequence({ netWorth, shortsWatched, loss }) {
 function reportShortScrolled() {
   chrome.runtime.sendMessage({ type: "SHORT_SCROLLED" }, (response) => {
     if (chrome.runtime.lastError || !response) return;
+    if (response.requiresAvatar) return;
     showConsequence(response);
   });
 }

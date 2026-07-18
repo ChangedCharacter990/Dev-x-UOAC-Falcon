@@ -38,19 +38,13 @@ async function updateBadge(netWorth) {
   });
 }
 
-chrome.runtime.onInstalled.addListener(async () => {
-  const { netWorth } = await getState();
-  // Clamp balances stored by older versions with a higher starting net worth,
-  // otherwise per-short losses are invisible against the leftover balance.
-  const clamped = Math.min(netWorth, STARTING_NET_WORTH);
-  if (clamped !== netWorth) {
-    await chrome.storage.local.set({ netWorth: clamped });
-  }
-  await updateBadge(clamped);
 async function configureAction() {
-  const { isInitialized } = await chrome.storage.local.get("isInitialized");
+  const { identity, isInitialized } = await chrome.storage.local.get([
+    "identity",
+    "isInitialized",
+  ]);
   await chrome.action.setPopup({
-    popup: isInitialized ? "popup.html" : "",
+    popup: !identity || isInitialized ? "popup/index.html" : "",
   });
 
   if (isInitialized) {
@@ -65,11 +59,20 @@ chrome.runtime.onInstalled.addListener(configureAction);
 
 chrome.runtime.onStartup.addListener(configureAction);
 
-chrome.storage.onChanged.addListener((changes, areaName) => {
-  if (areaName === "local" && (
-    changes.netWorth || changes.startingNetWorth || changes.isInitialized
-  )) {
-    configureAction();
+chrome.storage.onChanged.addListener(async (changes, areaName) => {
+  if (areaName !== "local") return;
+
+  if (changes.netWorth) {
+    const { newValue } = changes.netWorth;
+    if (newValue === undefined) {
+      await chrome.action.setBadgeText({ text: "" });
+    } else {
+      await updateBadge(newValue);
+    }
+  }
+
+  if (changes.identity || changes.startingNetWorth || changes.isInitialized) {
+    await configureAction();
   }
 });
 
@@ -96,7 +99,21 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
 
   if (message.type !== "SHORT_SCROLLED") return;
 
-  getState().then(async ({ netWorth, shortsWatched }) => {
+  chrome.storage.local.get("identity").then(async ({ identity }) => {
+    if (!identity) {
+      const url = chrome.runtime.getURL("popup/index.html");
+      const [existingTab] = await chrome.tabs.query({ url });
+      if (existingTab) {
+        await chrome.tabs.update(existingTab.id, { active: true });
+        await chrome.windows.update(existingTab.windowId, { focused: true });
+      } else {
+        await chrome.tabs.create({ url });
+      }
+      sendResponse({ requiresAvatar: true });
+      return;
+    }
+
+    const { netWorth, shortsWatched } = await getState();
     const nextNetWorth = Math.max(netWorth - LOSS_PER_SHORT, -5000);
     const nextShortsWatched = shortsWatched + 1;
     await chrome.storage.local.set({

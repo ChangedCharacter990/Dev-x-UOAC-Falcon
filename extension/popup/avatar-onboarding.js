@@ -1,0 +1,68 @@
+chrome.storage.onChanged.addListener(async (changes, areaName) => {
+  if (areaName !== "local" || !changes.identity?.newValue) return;
+  if (sessionStorage.getItem("avatarOnboardingHandled")) return;
+
+  await chrome.action.setPopup({ popup: "" });
+  await chrome.tabs.create({
+    url: chrome.runtime.getURL("networthInitialization.html"),
+  });
+  window.close();
+});
+
+const avatarPreview = {
+  body: "male",
+  skin: "olive",
+  hairStyle: "plain",
+  hairColor: "dark_brown",
+};
+const hairStyles = {
+  Plain: "plain", Buzzcut: "buzzcut", Afro: "afro", Curly: "curly_short",
+  Dreads: "dreadlocks_short", Long: "long_straight", Spiked: "spiked",
+  Cornrows: "cornrows", Bald: "bald",
+};
+
+chrome.storage.local.get("identity", ({ identity }) => {
+  if (!identity) chrome.storage.local.set({ avatarPreviewIdentity: avatarPreview });
+});
+
+document.addEventListener("click", (event) => {
+  const button = event.target instanceof Element ? event.target.closest("button") : null;
+  if (!button) return;
+
+  const label = button.textContent?.trim();
+  const ariaLabel = button.getAttribute("aria-label") || "";
+  if (label === "Masc") avatarPreview.body = "male";
+  else if (label === "Femme") avatarPreview.body = "female";
+  else if (hairStyles[label]) avatarPreview.hairStyle = hairStyles[label];
+  else if (ariaLabel.startsWith("hair color ")) avatarPreview.hairColor = ariaLabel.slice(11);
+  else if (ariaLabel.startsWith("skin tone ")) avatarPreview.skin = ariaLabel.slice(10);
+  else return;
+
+  chrome.storage.local.set({ avatarPreviewIdentity: avatarPreview });
+});
+
+document.addEventListener("click", async (event) => {
+  const button = event.target instanceof Element
+    ? event.target.closest("button")
+    : null;
+  if (!button || button.textContent?.trim() !== "Reset") return;
+
+  event.preventDefault();
+  event.stopImmediatePropagation();
+  if (!window.confirm("Reset all saved data? Your avatar and net-worth setup will be erased.")) {
+    return;
+  }
+
+  await chrome.storage.local.remove([
+    "identity",
+    "avatarPreviewIdentity",
+    "netWorth",
+    "startingNetWorth",
+    "shortsWatched",
+    "timeSpentSeconds",
+    "uncreditedWebsiteSeconds",
+    "isInitialized",
+  ]);
+  await chrome.action.setPopup({ popup: "popup/index.html" });
+  window.location.reload();
+}, true);

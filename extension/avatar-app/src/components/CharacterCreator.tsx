@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AvatarRenderer } from "./AvatarRenderer";
 import { Identity } from "../lib/types";
 import {
@@ -35,6 +35,10 @@ const swatchStyle = (color: string, active: boolean): React.CSSProperties => ({
 
 export function CharacterCreator({ onCreate }: CharacterCreatorProps) {
   const [identity, setIdentity] = useState<Identity>(DEFAULT_IDENTITY);
+
+  useEffect(() => {
+    chrome.storage.local.set({ avatarPreviewIdentity: identity });
+  }, [identity]);
 
   return (
     <div style={{ width: 280, padding: 20, fontFamily: "system-ui, sans-serif" }}>

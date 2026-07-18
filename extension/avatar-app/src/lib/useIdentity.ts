@@ -13,7 +13,7 @@ const STORAGE_KEY = "identity";
 export function useIdentity(): {
   identity: Identity | null;
   loaded: boolean;
-  saveIdentity: (identity: Identity) => void;
+  saveIdentity: (identity: Identity) => Promise<void>;
 } {
   const [identity, setIdentity] = useState<Identity | null>(null);
   const [loaded, setLoaded] = useState(false);
@@ -27,9 +27,9 @@ export function useIdentity(): {
     });
   }, []);
 
-  const saveIdentity = (next: Identity) => {
+  const saveIdentity = async (next: Identity) => {
     setIdentity(next);
-    chrome.storage.local.set({ [STORAGE_KEY]: next });
+    await chrome.storage.local.set({ [STORAGE_KEY]: next });
   };
 
   return { identity, loaded, saveIdentity };

@@ -2,7 +2,7 @@ import { AvatarRenderer } from "./components/AvatarRenderer";
 import { CharacterCreator } from "./components/CharacterCreator";
 import { useNetWorth } from "./lib/useNetWorth";
 import { useIdentity } from "./lib/useIdentity";
-import { getTier, STARTING_NET_WORTH, WEALTH_LOADOUTS } from "./lib/wealthTiers";
+import { getTier, WEALTH_LOADOUTS } from "./lib/wealthTiers";
 
 function formatCurrency(value: number) {
   return value.toLocaleString("en-US", {
@@ -16,6 +16,17 @@ export default function App() {
   const { netWorth, shortsWatched } = useNetWorth();
   const { identity, loaded, saveIdentity } = useIdentity();
 
+  const handleCreate = async (newIdentity: Parameters<typeof saveIdentity>[0]) => {
+    sessionStorage.setItem("avatarOnboardingHandled", "true");
+    await saveIdentity(newIdentity);
+    await chrome.storage.local.remove("avatarPreviewIdentity");
+    await chrome.action.setPopup({ popup: "" });
+    await chrome.tabs.create({
+      url: chrome.runtime.getURL("networthInitialization.html"),
+    });
+    window.close();
+  };
+
   const wrapperStyle = {
     background: "#0f172a",
     color: "#f8fafc",
@@ -28,7 +39,7 @@ export default function App() {
   if (!identity) {
     return (
       <div style={wrapperStyle}>
-        <CharacterCreator onCreate={saveIdentity} />
+        <CharacterCreator onCreate={handleCreate} />
       </div>
     );
   }
@@ -36,11 +47,23 @@ export default function App() {
   const tier = getTier(netWorth);
   const loadout = WEALTH_LOADOUTS[tier];
 
-  const handleReset = () => {
-    chrome.storage.local.set({
-      netWorth: STARTING_NET_WORTH,
-      shortsWatched: 0,
-    });
+  const handleReset = async () => {
+    if (!window.confirm("Reset all saved data? Your avatar and net-worth setup will be erased.")) {
+      return;
+    }
+
+    await chrome.storage.local.remove([
+      "identity",
+      "avatarPreviewIdentity",
+      "netWorth",
+      "startingNetWorth",
+      "shortsWatched",
+      "timeSpentSeconds",
+      "uncreditedWebsiteSeconds",
+      "isInitialized",
+    ]);
+    await chrome.action.setPopup({ popup: "popup/index.html" });
+    window.location.reload();
   };
 
   return (
