@@ -43,8 +43,31 @@ Deno.serve(async (request) => {
     return new Response(null, { headers: corsHeaders(origin) });
   }
 
-  if (request.method !== "POST") {
+  if (request.method !== "POST" && request.method !== "GET") {
     return json({ error: "Method not allowed" }, 405, origin);
+  }
+
+  if (request.method === "GET") {
+    // Keep the same origin check and Google-token validation code first.
+
+    const { data, error } = await supabase
+      .from("user_net_worth")
+      .select("net_worth, shorts_watched, updated_at")
+      .eq("google_user_id", googleUserId)
+      .maybeSingle();
+
+    if (error) {
+      return json({ error: "Could not check user state" }, 500, origin);
+    }
+
+    return json(
+      {
+        exists: Boolean(data),
+        state: data ?? null,
+      },
+      200,
+      origin,
+    );
   }
 
   if (origin !== allowedOrigin) {
