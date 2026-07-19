@@ -4,8 +4,48 @@ window.onload = function () {
     chrome.identity.getAuthToken({ interactive: true }, function (token) {
       console.log(token);
     });
+  if (checkExistingUser()){
+
+    console.log("Get request accepted and user exists");
+  }
+
+
 };
 
+async function checkExistingUser() {
+  const tokenResult = await chrome.identity.getAuthToken({
+    interactive: false,
+  });
+  const token = tokenResult.token ?? tokenResult;
+
+  const response = await fetch(
+    "https://knlhhzxzdskpfvhmhozj.supabase.co/functions/v1/sync-net-worth",
+    {
+      method: "GET",
+      headers: { Authorization: `Bearer ${token}` },
+    },
+  );
+
+  const result = await response.json();
+
+  if (!response.ok) {
+    throw new Error(result.error ?? "Could not check existing user");
+  }
+
+  if (result.exists && result.state) {
+    await chrome.storage.local.set({
+      netWorth: result.state.net_worth,
+      shortsWatched: result.state.shorts_watched,
+    });
+
+    console.log("Restored saved state:", result.state);
+  } else {
+    await chrome.storage.local.set({
+      netWorth: 1000000,
+      shortsWatched: 0,
+    });
+  }
+}
 
 
 chrome.storage.onChanged.addListener(async (changes, areaName) => {
