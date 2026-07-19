@@ -144,10 +144,19 @@ chrome.action.onClicked.addListener(async () => {
 
   const path = !account || !identity ? "popup/index.html" : "networthInitialization.html";
   const url = chrome.runtime.getURL(path);
-  const [existingTab] = await chrome.tabs.query({ url });
+
+  // Compare URLs ourselves instead of tabs.query({ url }) — its match-pattern
+  // filter is unreliable for chrome-extension:// pages, and a silent miss here
+  // meant clicking the icon while already on this page opened a duplicate tab.
+  const tabs = await chrome.tabs.query({});
+  const existingTab = tabs.find(
+    (tab) => tab.url && tab.url.split(/[?#]/)[0] === url
+  );
 
   if (existingTab) {
-    await chrome.tabs.update(existingTab.id, { active: true });
+    if (!existingTab.active) {
+      await chrome.tabs.update(existingTab.id, { active: true });
+    }
     await chrome.windows.update(existingTab.windowId, { focused: true });
   } else {
     await chrome.tabs.create({ url });
